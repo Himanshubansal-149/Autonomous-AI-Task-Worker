@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} | {{ {"portal": "VendorHub", "erp": "Ledgerly"}.get(system, "Northwind Traders") }}</title>
+<style>
+  :root { --ink:#1c2330; --muted:#667085; --line:#e3e6ec; --bg:#f5f6f9; --card:#fff; --accent:#3b4cca; --bad:#b42318; --good:#177245; }
+  body.portal { --accent:#0b7a75; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--accent); color:#fff; padding:0 28px; display:flex; align-items:center; gap:28px; height:54px; }
+  header .brand { font-weight:700; font-size:17px; letter-spacing:.2px; }
+  header nav { display:flex; gap:18px; flex:1; }
+  header a { color:#fff; text-decoration:none; opacity:.9; }
+  header a:hover { opacity:1; text-decoration:underline; }
+  main { max-width:1040px; margin:28px auto; padding:0 28px; }
+  h1 { font-size:24px; margin:0 0 18px; }
+  h2 { font-size:17px; margin:26px 0 10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin-bottom:18px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:8px; }
+  th, td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); }
+  th { font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  a { color:var(--accent); }
+  label { display:block; font-weight:600; margin:14px 0 5px; }
+  input[type=text], input[type=password], input[type=search], select, textarea {
+    width:100%; max-width:420px; padding:8px 10px; border:1px solid #c5cad3; border-radius:6px; font:inherit; background:#fff; }
+  .hint { color:var(--muted); font-size:13px; font-weight:400; }
+  button, .btn { display:inline-block; background:var(--accent); color:#fff; border:0; border-radius:6px; padding:9px 16px;
+    font:inherit; font-weight:600; cursor:pointer; text-decoration:none; }
+  .btn.secondary { background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  .actions { margin-top:20px; display:flex; gap:10px; align-items:center; }
+  .flash { background:#e7f6ec; border:1px solid #a6dbb8; color:var(--good); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .errors { background:#fdecea; border:1px solid #f3b4ae; color:var(--bad); padding:10px 14px; border-radius:6px; margin-bottom:16px; }
+  .errors ul { margin:4px 0 0; padding-left:20px; }
+  .pill { display:inline-block; padding:1px 9px; border-radius:99px; font-size:12.5px; font-weight:600; background:#eef0f4; }
+  .pill.unpaid { background:#fff1d6; color:#8a5a00; } .pill.paid { background:#e7f6ec; color:var(--good); }
+  .pill.scheduled { background:#e4e9ff; color:#2f3fae; } .pill.overdue { background:#fdecea; color:var(--bad); }
+  dl { display:grid; grid-template-columns:170px 1fr; gap:8px 16px; margin:0; }
+  dt { color:var(--muted); } dd { margin:0; font-weight:600; }
+  .filters { display:flex; gap:10px; align-items:end; margin-bottom:16px; flex-wrap:wrap; }
+  .filters label { margin-top:0; } .filters input, .filters select { width:210px; }
+  .stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  .stats .n { font-size:30px; font-weight:700; }
+  .topbar { background:#131a26; color:#fff; height:52px; padding:0 28px; display:flex; align-items:center; gap:14px;
+            font:14.5px/1.5 system-ui, "Segoe UI", sans-serif; box-sizing:border-box; }
+  .topbar .title { font-size:17px; font-weight:700; margin:0; white-space:nowrap; }
+  .topbar .sub { color:#9fb0cc; font-size:13px; white-space:nowrap; }
+  .topbar nav { margin-left:auto; display:flex; gap:8px; }
+  .topbar nav a { color:#fff; text-decoration:none; font-size:13px; font-weight:600; padding:6px 12px; border-radius:6px;
+                  background:#26324a; white-space:nowrap; opacity:1; }
+  .topbar nav a:hover { background:#34446a; text-decoration:none; }
+  .topbar nav a.current { background:#2f54d6; }
+  .overlay { position:fixed; inset:0; background:rgba(15,20,35,.55); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .overlay .dialog { background:#fff; border-radius:10px; padding:26px 28px; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+</style>
+</head>
+<body class="{{ system }}">
+<div class="topbar" id="demobar">
+  <span class="title">AI Task Worker</span><span class="sub">Northwind Traders sandbox</span>
+  <nav>
+    <a href="{{ console_url }}" target="nwt-console">Worker console</a>
+    <a href="/portal" target="nwt-portal" class="{{ 'current' if system == 'portal' }}">Supplier portal</a>
+    <a href="/erp" target="nwt-erp" class="{{ 'current' if system == 'erp' }}">Finance system</a>
+  </nav>
+</div>
+<script>
+  // Navigation for the people watching the demo. The AI worker's automated browser
+  // does not get it, so it never sees links that lead outside the company systems.
+  if (navigator.webdriver) document.getElementById("demobar").remove();
+</script>
+<header>
+  {% if system == "portal" %}
+    <span class="brand">VendorHub</span>
+    <nav>{% if user %}<a href="/portal/vendors">Vendors</a>{% endif %}</nav>
+    {% if user %}<span>{{ user }}</span><a href="/portal/logout">Sign out</a>{% endif %}
+  {% elif system == "erp" %}
+    <span class="brand">Ledgerly</span>
+    <nav>{% if user %}<a href="/erp">Dashboard</a><a href="/erp/invoices">Invoices</a><a href="/erp/vendors">Vendors</a><a href="/erp/audit">Audit log</a>{% endif %}</nav>
+    {% if user %}<span>{{ user }}</span><a href="/erp/logout">Sign out</a>{% endif %}
+  {% else %}
+    <span class="brand">Northwind Traders</span>
+  {% endif %}
+</header>
+<main>
+  {% if flash %}<div class="flash" role="status">{{ flash }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% if show_modal %}
+<div class="overlay" id="notice" role="dialog" aria-modal="true" aria-label="Scheduled maintenance">
+  <div class="dialog">
+    <h2 style="margin-top:0">Scheduled maintenance</h2>
+    <p>Ledgerly will be read-only tonight from 23:00 to 23:30 for a database upgrade.</p>
+    <button type="button" onclick="document.cookie='notice_dismissed=1; path=/'; document.getElementById('notice').remove()">Got it</button>
+  </div>
+</div>
+{% endif %}
+</body>
+</html>

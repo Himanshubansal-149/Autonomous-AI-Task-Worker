@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ inv.number }}{% endblock %}
+{% block content %}
+<p><a href="/erp/invoices">All invoices</a></p>
+<h1>Invoice {{ inv.number }}</h1>
+<div class="card">
+  <dl>
+    <dt>Ledgerly ID</dt><dd>{{ inv.id }}</dd>
+    <dt>Vendor</dt><dd>{{ inv.vendor_name }}</dd>
+    <dt>Invoice number</dt><dd>{{ inv.number }}</dd>
+    <dt>Issue date</dt><dd>{{ inv.issue_date }}</dd>
+    <dt>Due date</dt><dd>{{ inv.due_date }}</dd>
+    <dt>Amount</dt><dd>{{ inv.currency }} {{ inv.amount | money }}</dd>
+    <dt>PO number</dt><dd>{{ inv.po_number or "none" }}</dd>
+    <dt>Status</dt><dd><span class="pill {{ inv.status }}">{{ inv.status }}</span></dd>
+    <dt>Recorded by</dt><dd>{{ inv.created_by }} on {{ inv.created_at }}</dd>
+    {% if inv.notes %}<dt>Notes</dt><dd>{{ inv.notes }}</dd>{% endif %}
+  </dl>
+</div>
+{% if payments %}
+<h2>Payments</h2>
+<table><tr><th>Payment date</th><th class="num">Amount</th><th>Created by</th></tr>
+  {% for p in payments %}<tr><td>{{ p.pay_date }}</td><td class="num">{{ inv.currency }} {{ p.amount | money }}</td><td>{{ p.created_by }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% if inv.status == "unpaid" %}<div class="actions"><a class="btn" href="/erp/invoices/{{ inv.id }}/pay">Schedule payment</a></div>{% endif %}
+{% endblock %}

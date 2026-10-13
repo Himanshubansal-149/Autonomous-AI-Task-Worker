@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ vendor.name }}{% endblock %}
+{% block content %}
+<p><a href="/portal/vendors">All vendors</a></p>
+<h1>{{ vendor.name }}</h1>
+<h2>Invoices posted by this vendor</h2>
+<div id="invoices"><p class="hint" id="loading">Loading invoices…</p></div>
+<script>
+  // Rendered client-side after a delay, like a typical single-page portal.
+  setTimeout(async () => {
+    const box = document.getElementById("invoices");
+    const res = await fetch("/portal/data/vendors/{{ vendor.id }}/invoices");
+    if (!res.ok) { box.innerHTML = "<div class=\"errors\" role=\"alert\">Could not load invoices.</div>"; return; }
+    const rows = await res.json();
+    if (!rows.length) { box.innerHTML = "<p>This vendor has not posted any invoices.</p>"; return; }
+    box.innerHTML = "<table><tr><th>Invoice</th><th>Issued</th><th>Due</th><th class=\"num\">Total</th></tr>" +
+      rows.map(r => `<tr><td><a href="/portal/invoices/${r.id}">${r.number}</a></td><td>${r.issue_date}</td>` +
+        `<td>${r.due_date}</td><td class="num">${r.total}</td></tr>`).join("") + "</table>";
+  }, {{ delay_ms }});
+</script>
+{% endblock %}

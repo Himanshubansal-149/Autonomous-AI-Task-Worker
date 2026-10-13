@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<h1>Vendor master</h1>
+<table>
+  <tr><th>ID</th><th>Vendor</th><th>AP contact</th><th>Payment terms</th><th>Bank account</th><th></th></tr>
+  {% for v in vendors %}
+  <tr><td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.contact_email }}</td><td>{{ v.payment_terms }}</td><td>{{ v.bank_account }}</td>
+      <td><a href="/erp/vendors/{{ v.id }}/edit" aria-label="Edit {{ v.name }}">Edit</a></td></tr>
+  {% endfor %}
+</table>
+<p class="hint">New vendors are onboarded by procurement. AP cannot add vendors.</p>
+{% endblock %}

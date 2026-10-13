@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ inv.number }}{% endblock %}
+{% block content %}
+<p><a href="/portal/vendors/{{ inv.vendor_id }}">Back to {{ inv.vendor_name }}</a></p>
+<h1>Invoice {{ inv.number }}</h1>
+<div class="card">
+  <dl>
+    <dt>Vendor</dt><dd>{{ inv.vendor_name }}</dd>
+    <dt>Invoice number</dt><dd>{{ inv.number }}</dd>
+    <dt>Issue date</dt><dd>{{ inv.issue_date | pretty_date }}</dd>
+    <dt>Due date</dt><dd>{{ inv.due_date | pretty_date }}</dd>
+    <dt>PO reference</dt><dd>{{ inv.po_number }}</dd>
+    <dt>Currency</dt><dd>{{ inv.currency }}</dd>
+  </dl>
+</div>
+<table>
+  <tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr>
+  {% for desc, qty, unit in inv.lines %}
+  <tr><td>{{ desc }}</td><td class="num">{{ qty }}</td><td class="num">${{ unit | money }}</td><td class="num">${{ (qty * unit) | money }}</td></tr>
+  {% endfor %}
+  <tr><td colspan="3" class="num">Subtotal</td><td class="num">${{ inv.subtotal | money }}</td></tr>
+  <tr><td colspan="3" class="num">Tax (10%)</td><td class="num">${{ inv.tax | money }}</td></tr>
+  <tr><td colspan="3" class="num"><strong>Total due</strong></td><td class="num"><strong>${{ inv.total | money }}</strong></td></tr>
+</table>
+<div class="actions"><a class="btn secondary" href="/portal/invoices/{{ inv.id }}/pdf" download>Download PDF</a></div>
+{% endblock %}

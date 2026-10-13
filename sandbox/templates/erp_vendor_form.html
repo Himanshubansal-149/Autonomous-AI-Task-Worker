@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ vendor.name }}{% endblock %}
+{% block content %}
+<p><a href="/erp/vendors">Vendor master</a></p>
+<h1>Edit vendor: {{ vendor.name }}</h1>
+{% if errors %}<div class="errors" role="alert"><strong>The vendor was not saved.</strong><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form class="card" method="post" action="/erp/vendors/{{ vendor.id }}/edit">
+  <label for="contact_email">AP contact email</label>
+  <input type="text" id="contact_email" name="contact_email" value="{{ vendor.contact_email }}">
+  <label for="payment_terms">Payment terms</label>
+  <select id="payment_terms" name="payment_terms">
+    {% for t in terms %}<option value="{{ t }}" {{ "selected" if vendor.payment_terms == t }}>{{ t }}</option>{% endfor %}
+  </select>
+  <label for="bank_account">Bank account</label>
+  <input type="text" id="bank_account" name="bank_account" value="{{ vendor.bank_account }}">
+  <div class="actions"><button type="submit">Save vendor</button><a href="/erp/vendors">Cancel</a></div>
+</form>
+{% endblock %}

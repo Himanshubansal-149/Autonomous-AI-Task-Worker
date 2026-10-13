@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<h1>Audit log</h1>
+<table>
+  <tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr>
+  {% for e in entries %}<tr><td>{{ e.ts }}</td><td>{{ e.actor }}</td><td>{{ e.action }}</td><td>{{ e.detail }}</td></tr>
+  {% else %}<tr><td colspan="4">No activity yet.</td></tr>{% endfor %}
+</table>
+{% endblock %}

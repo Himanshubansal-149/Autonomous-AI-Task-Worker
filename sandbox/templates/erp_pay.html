@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Schedule payment{% endblock %}
+{% block content %}
+<p><a href="/erp/invoices/{{ inv.id }}">Back to invoice {{ inv.number }}</a></p>
+<h1>Schedule payment</h1>
+{% if errors %}<div class="errors" role="alert"><strong>The payment was not scheduled.</strong><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form class="card" method="post" action="/erp/invoices/{{ inv.id }}/pay">
+  <dl>
+    <dt>Vendor</dt><dd>{{ inv.vendor_name }}</dd>
+    <dt>Invoice</dt><dd>{{ inv.number }}</dd>
+    <dt>Amount to pay</dt><dd>{{ inv.currency }} {{ inv.amount | money }}</dd>
+    <dt>Due date</dt><dd>{{ inv.due_date }}</dd>
+  </dl>
+  <label for="pay_date">Payment date</label>
+  <input type="text" id="pay_date" name="pay_date" value="{{ pay_date }}" placeholder="YYYY-MM-DD">
+  <div class="actions"><button type="submit">Confirm payment</button><a href="/erp/invoices/{{ inv.id }}">Cancel</a></div>
+</form>
+{% endblock %}

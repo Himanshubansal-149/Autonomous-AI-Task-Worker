@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<h1>Sign in to {{ "VendorHub" if system == "portal" else "Ledgerly" }}</h1>
+{% if error %}<div class="errors" role="alert">{{ error }}</div>{% endif %}
+<form class="card" method="post" action="/{{ 'portal' if system == 'portal' else 'erp' }}/login">
+  <input type="hidden" name="next" value="{{ next }}">
+  <label for="username">Username</label>
+  <input type="text" id="username" name="username" autocomplete="off">
+  <label for="password">Password</label>
+  <input type="password" id="password" name="password">
+  <div class="actions"><button type="submit">Sign in</button></div>
+</form>
+{% endblock %}

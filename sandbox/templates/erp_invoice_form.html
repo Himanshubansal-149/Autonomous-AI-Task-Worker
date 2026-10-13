@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Record an invoice{% endblock %}
+{% block content %}
+<h1>Record an invoice</h1>
+{% if errors %}<div class="errors" role="alert"><strong>The invoice was not saved.</strong><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form class="card" method="post" action="/erp/invoices/new">
+  <label for="vendor_id">Vendor</label>
+  <select id="vendor_id" name="vendor_id"><option value="">Select a vendor</option>
+    {% for v in vendors %}<option value="{{ v.id }}" {{ "selected" if values.vendor_id == v.id|string }}>{{ v.name }}</option>{% endfor %}
+  </select>
+  <label for="number">Invoice number</label>
+  <input type="text" id="number" name="number" value="{{ values.number }}">
+  <label for="issue_date">Issue date</label>
+  <input type="text" id="issue_date" name="issue_date" value="{{ values.issue_date }}" placeholder="YYYY-MM-DD">
+  <label for="due_date">Due date</label>
+  <input type="text" id="due_date" name="due_date" value="{{ values.due_date }}" placeholder="YYYY-MM-DD">
+  <label for="amount">Amount <span class="hint">(total payable, including tax)</span></label>
+  <input type="text" id="amount" name="amount" value="{{ values.amount }}">
+  <label for="currency">Currency</label>
+  <select id="currency" name="currency">
+    {% for c in currencies %}<option value="{{ c }}" {{ "selected" if values.currency == c }}>{{ c }}</option>{% endfor %}
+  </select>
+  <label for="po_number">PO number <span class="hint">(optional)</span></label>
+  <input type="text" id="po_number" name="po_number" value="{{ values.po_number }}">
+  <label for="notes">Notes <span class="hint">(optional)</span></label>
+  <textarea id="notes" name="notes" rows="2">{{ values.notes }}</textarea>
+  <div class="actions"><button type="submit">Save invoice</button><a href="/erp/invoices">Cancel</a></div>
+</form>
+{% endblock %}

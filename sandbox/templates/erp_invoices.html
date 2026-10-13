@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+{% block content %}
+<h1>Invoices</h1>
+<form class="filters" method="get" action="/erp/invoices">
+  <div><label for="q">Search</label><input type="search" id="q" name="q" value="{{ q }}" placeholder="Invoice number or vendor"></div>
+  <div><label for="vendor_id">Vendor</label>
+    <select id="vendor_id" name="vendor_id"><option value="">All vendors</option>
+      {% for v in vendors %}<option value="{{ v.id }}" {{ "selected" if vendor_id == v.id|string }}>{{ v.name }}</option>{% endfor %}
+    </select></div>
+  <div><label for="status">Status</label>
+    <select id="status" name="status"><option value="">Any status</option>
+      {% for s in ["unpaid", "scheduled", "paid"] %}<option value="{{ s }}" {{ "selected" if status == s }}>{{ s }}</option>{% endfor %}
+    </select></div>
+  <button type="submit">Filter</button>
+  <a class="btn secondary" href="/erp/invoices/new">Record an invoice</a>
+</form>
+<table>
+  <tr><th>ID</th><th>Vendor</th><th>Invoice</th><th>Issued</th><th>Due</th><th class="num">Amount</th><th>Status</th></tr>
+  {% for i in invoices %}
+  <tr>
+    <td>{{ i.id }}</td><td>{{ i.vendor_name }}</td><td><a href="/erp/invoices/{{ i.id }}">{{ i.number }}</a></td>
+    <td>{{ i.issue_date }}</td><td>{{ i.due_date }}</td><td class="num">{{ i.currency }} {{ i.amount | money }}</td>
+    <td><span class="pill {{ i.status }}">{{ i.status }}</span>{% if i.status == "unpaid" and i.due_date < today %} <span class="pill overdue">overdue</span>{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7">No invoices match these filters.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

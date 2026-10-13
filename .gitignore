@@ -1,0 +1,17 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated at run time
+workspace/
+runs/
+memory/
+sandbox/data/
+
+# The assignment brief
+*.docx
+
+# Personal recording notes
+RECORDING_GUIDE.md

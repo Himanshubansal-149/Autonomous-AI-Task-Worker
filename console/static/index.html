@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI worker console</title>
+<style>
+  :root { --ink:#18202c; --muted:#69758a; --line:#e2e6ee; --bg:#f4f6fa; --card:#fff; --accent:#2f54d6;
+          --good:#12734a; --good-bg:#e5f5ec; --bad:#b3261e; --bad-bg:#fcebe9; --warn:#8a5a00; --warn-bg:#fff3d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14.5px/1.5 system-ui, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  .topbar { background:#131a26; color:#fff; height:52px; padding:0 28px; display:flex; align-items:center; gap:14px;
+            font:14.5px/1.5 system-ui, "Segoe UI", sans-serif; box-sizing:border-box; }
+  .topbar .title { font-size:17px; font-weight:700; margin:0; white-space:nowrap; }
+  .topbar .sub { color:#9fb0cc; font-size:13px; white-space:nowrap; }
+  .topbar nav { margin-left:auto; display:flex; gap:8px; }
+  .topbar nav a { color:#fff; text-decoration:none; font-size:13px; font-weight:600; padding:6px 12px; border-radius:6px;
+                  background:#26324a; white-space:nowrap; opacity:1; }
+  .topbar nav a:hover { background:#34446a; text-decoration:none; }
+  .topbar nav a.current { background:#2f54d6; }
+  .layout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:20px; padding:20px 28px; max-width:1560px; margin:0 auto; }
+  @media (max-width:1000px) { .layout { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:16px; }
+  h2 { font-size:12.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin:0 0 10px; }
+  textarea, input[type=text], select { width:100%; font:inherit; padding:9px 11px; border:1px solid #c6cdd9; border-radius:7px; background:#fff; }
+  textarea { min-height:74px; resize:vertical; }
+  button { font:inherit; font-weight:600; border:0; border-radius:7px; padding:9px 16px; cursor:pointer; background:var(--accent); color:#fff; }
+  button:disabled { opacity:.5; cursor:default; }
+  button.ghost { background:#fff; color:var(--accent); border:1px solid #b8c4ee; font-weight:500; padding:5px 10px; font-size:13px; }
+  button.decline { background:#fff; color:var(--bad); border:1px solid #e5a9a4; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+  .row label { color:var(--muted); font-size:13px; }
+  .row select { width:auto; }
+  .examples { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .timeline { max-height:calc(100vh - 330px); min-height:300px; overflow:auto; }
+  .ev { padding:7px 0 7px 12px; border-left:3px solid var(--line); margin-left:2px; }
+  .ev.verifier { margin-left:22px; border-left-color:#c9b6f2; }
+  .ev .head { font-family:ui-monospace, Consolas, monospace; font-size:13px; word-break:break-word; }
+  .ev .body { color:var(--muted); font-size:13px; white-space:pre-wrap; word-break:break-word; }
+  .ev.think .body { font-style:italic; }
+  .ev.err { border-left-color:var(--bad); } .ev.err .res { color:var(--bad); }
+  .ev.gate { border-left-color:#e0a100; background:var(--warn-bg); padding-right:8px; }
+  .ev.person { border-left-color:var(--accent); background:#eef2ff; padding-right:8px; }
+  details summary { cursor:pointer; color:var(--muted); font-size:12.5px; }
+  details pre { white-space:pre-wrap; word-break:break-word; font-size:12px; background:#f6f7fa; padding:8px; border-radius:6px; max-height:260px; overflow:auto; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.4px; padding:1px 7px; border-radius:99px; background:#ece6fb; color:#5a3db0; margin-right:6px; text-transform:uppercase; }
+  .shot:not([src]) { display:none; }
+  .shot { width:100%; border:1px solid var(--line); border-radius:8px; display:block; background:#eef0f4; min-height:120px; }
+  .plan li { list-style:none; margin:3px 0; padding-left:24px; position:relative; }
+  .plan ul { padding:0; margin:0; }
+  .plan li::before { content:"○"; position:absolute; left:2px; color:var(--muted); }
+  .plan li.st-in_progress::before { content:"▶"; color:var(--accent); }
+  .plan li.st-done::before { content:"✓"; color:var(--good); }
+  .plan li.st-done { color:var(--muted); }
+  .pending { border:2px solid #e0a100; background:var(--warn-bg); }
+  .pending p { margin:6px 0 10px; }
+  .badge { display:inline-block; padding:3px 11px; border-radius:99px; font-weight:700; font-size:13px; }
+  .badge.good { background:var(--good-bg); color:var(--good); } .badge.bad { background:var(--bad-bg); color:var(--bad); }
+  .badge.warn { background:var(--warn-bg); color:var(--warn); }
+  .check { padding:5px 0; border-top:1px solid var(--line); font-size:13.5px; }
+  .check .pass { color:var(--good); font-weight:700; } .check .fail { color:var(--bad); font-weight:700; }
+  .check small { color:var(--muted); display:block; }
+  .muted { color:var(--muted); font-size:13px; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="title">AI Task Worker</span><span class="sub" id="info"></span>
+  <nav>
+    <a class="current" href="/">Worker console</a>
+    <a id="nav-portal" target="nwt-portal">Supplier portal</a>
+    <a id="nav-erp" target="nwt-erp">Finance system</a>
+  </nav>
+</div>
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2>Task</h2>
+      <textarea id="task" placeholder="Describe what you need done, the way you would ask a colleague."></textarea>
+      <div class="examples" id="examples"></div>
+      <div class="row">
+        <button id="start">Hand over task</button>
+        <button id="reset-now" class="ghost" title="Delete everything the worker has entered and restore the starting data">Reset company data now</button>
+        <label><input type="checkbox" id="reset" checked> Reset company data first</label>
+        <label>Inject faults: <select id="chaos">
+          <option value="none">none</option>
+          <option value="rough_day">rough day (blocking dialog, expired session, 503 on save)</option>
+          <option value="lost_response">lost response (save succeeds but server answers 504)</option>
+        </select></label>
+      </div>
+      <div class="muted" id="status" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>What the worker is doing</h2>
+      <div class="timeline" id="timeline"><div class="muted">Nothing running yet.</div></div>
+    </div>
+  </div>
+  <div>
+    <div class="card pending hidden" id="pending"></div>
+    <div class="card hidden" id="result"></div>
+    <div class="card plan hidden" id="plan-card"><h2>Plan</h2><ul id="plan"></ul></div>
+    <div class="card"><h2>What the worker sees</h2><img class="shot" id="shot" alt="Latest browser screenshot"><div class="muted" id="shot-note">The browser view appears once the worker opens a page.</div></div>
+  </div>
+</div>
+<script>
+const EXAMPLES = [
+  "Find the latest invoice from Acme Robotics, extract the amount and due date, enter it into our internal system, and tell me once it is done.",
+  "Process the invoices waiting in the inbox folder.",
+  "Which invoices are overdue and how much do we owe on them in total? Save a short report.",
+  "Pay the Globex invoice.",
+  "Zenith Office Supplies told us their AP contact is now billing@zenith-office.example and their terms are Net 45. Update their record.",
+  "Enter the latest invoice from Initech Software into our finance system.",
+];
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+let runId = null, seen = 0, timer = null, pendingId = null, lastCall = null;
+
+EXAMPLES.forEach(t => { const b = el("button", "ghost", t.length > 62 ? t.slice(0, 60) + "…" : t); b.title = t; b.onclick = () => $("task").value = t; $("examples").append(b); });
+fetch("/api/info").then(r => r.json()).then(i => { $("info").textContent = "model: " + i.model; $("nav-portal").href = i.sandbox_url + "/portal"; $("nav-erp").href = i.sandbox_url + "/erp"; });
+
+$("reset-now").onclick = async () => {
+  if (!confirm("Restore the supplier portal and finance system to their starting data? Anything entered so far will be removed.")) return;
+  const res = await fetch("/api/reset", { method: "POST" });
+  const data = await res.json();
+  $("status").textContent = res.ok ? "Company data reset. Refresh the supplier portal and finance system tabs to see it." : (data.detail || "Could not reset.");
+};
+
+$("start").onclick = async () => {
+  const res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ task: $("task").value, reset: $("reset").checked, chaos: $("chaos").value }) });
+  const data = await res.json();
+  if (!res.ok) { $("status").textContent = data.detail || "Could not start."; return; }
+  runId = data.id; seen = 0; pendingId = null;
+  $("timeline").replaceChildren(); $("plan").replaceChildren();
+  ["result", "pending", "plan-card"].forEach(id => $(id).classList.add("hidden"));
+  $("shot").removeAttribute("src"); $("shot-note").classList.remove("hidden");
+  $("start").disabled = true; $("status").textContent = "Working… run " + runId;
+  clearInterval(timer); timer = setInterval(poll, 700); poll();
+};
+
+async function poll() {
+  const data = await (await fetch(`/api/runs/${runId}?after=${seen}`)).json();
+  data.events.forEach(render); seen += data.events.length;
+  renderPending(data.pending);
+  if (data.done) {
+    clearInterval(timer); $("start").disabled = false;
+    $("status").textContent = data.error ? "The run crashed: " + data.error : "Finished.";
+    if (data.result) renderResult(data.result);
+  }
+}
+
+function add(node) { const t = $("timeline"); const stick = t.scrollHeight - t.scrollTop - t.clientHeight < 80; t.append(node); if (stick) t.scrollTop = t.scrollHeight; }
+function row(ev, cls) { const r = el("div", "ev " + (cls || "") + (ev.role === "verifier" ? " verifier" : "")); if (ev.role === "verifier") r.append(el("span", "tag", "verifier")); return r; }
+
+function render(ev) {
+  if (ev.type === "llm") {
+    for (const [text, cls] of [[ev.thinking, "think"], [ev.text, ""]]) {
+      if (!text) continue;
+      const r = row(ev, cls); r.append(el("div", "body", text)); add(r);
+    }
+  } else if (ev.type === "tool_call") {
+    const r = row(ev); r.append(el("div", "head", `${ev.name}(${JSON.stringify(ev.args)})`)); lastCall = r; add(r);
+  } else if (ev.type === "tool_result") {
+    const r = lastCall || row(ev); if (ev.is_error) r.classList.add("err");
+    const first = ev.content.split("\n").find(l => l.trim()) || "";
+    r.append(el("div", "body res", (ev.is_error ? "✗ " : "→ ") + first.slice(0, 220)));
+    const d = el("details"); d.append(el("summary", null, "full observation"), el("pre", null, ev.content)); r.append(d);
+    if (ev.screenshot) { $("shot").src = `/api/runs/${runId}/files/${ev.screenshot}`; $("shot-note").classList.add("hidden"); }
+  } else if (ev.type === "plan") {
+    $("plan-card").classList.remove("hidden");
+    $("plan").replaceChildren(...ev.steps.map(s => el("li", "st-" + s.status, s.step)));
+  } else if (ev.type === "policy") {
+    const r = row(ev, "gate"); r.append(el("div", "head", `Policy: ${ev.decision === "deny" ? "blocked" : "needs human approval"} — ${ev.reason}`)); add(r);
+  } else if (ev.type === "human") {
+    const r = row(ev, "person"); r.append(el("div", "head", (ev.kind === "approval" ? "Approval requested: " : "Asked: ") + ev.prompt), el("div", "body", "Response: " + ev.response)); add(r);
+  } else if (ev.type === "memory") {
+    const r = row(ev); r.append(el("div", "body", (ev.scope === "long_term" ? "Lesson saved for future tasks: " : "Noted: ") + ev.note)); add(r);
+  } else if (ev.type === "verification") {
+    const word = ev.verified === true ? "confirmed" : ev.verified === false ? "NOT confirmed" : "could not be completed";
+    const r = row(ev, ev.verified === true ? "" : "err"); r.append(el("div", "head", `Independent verification, round ${ev.round}: ${word}`));
+    if (ev.feedback) r.append(el("div", "body", ev.feedback)); add(r);
+  } else if (ev.type === "notice") {
+    const r = row(ev); r.append(el("div", "body", "Harness: " + ev.message)); add(r);
+  }
+}
+
+function renderPending(p) {
+  const box = $("pending");
+  if (!p) { box.classList.add("hidden"); pendingId = null; return; }
+  if (p.id === pendingId) return;
+  pendingId = p.id; box.classList.remove("hidden"); box.replaceChildren();
+  const send = body => fetch(`/api/runs/${runId}/respond`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: p.id, ...body }) });
+  if (p.kind === "approval") {
+    const note = el("input"); note.type = "text"; note.placeholder = "Optional note to the worker";
+    const yes = el("button", null, "Approve"), no = el("button", "decline", "Decline");
+    yes.onclick = () => send({ approved: true, note: note.value }); no.onclick = () => send({ approved: false, note: note.value });
+    const r = el("div", "row"); r.append(yes, no);
+    box.append(el("h2", null, "Your approval is needed: " + p.reason), el("p", null, p.prompt), note, r);
+  } else {
+    const input = el("input"); input.type = "text"; input.placeholder = "Your answer";
+    const go = el("button", null, "Send answer"); go.onclick = () => send({ answer: input.value });
+    const opts = el("div", "examples"); (p.options || []).forEach(o => { const b = el("button", "ghost", o); b.onclick = () => send({ answer: o }); opts.append(b); });
+    const r = el("div", "row"); r.append(go);
+    box.append(el("h2", null, "The worker has a question"), el("p", null, p.prompt), opts, input, r);
+  }
+}
+
+function renderResult(r) {
+  const box = $("result"); box.classList.remove("hidden"); box.replaceChildren();
+  const ok = r.status === "completed" && r.verified === true;
+  const cls = ok ? "good" : (r.status === "failed" || r.verified === false ? "bad" : "warn");
+  const verified = r.verified === true ? "independently verified" : r.verified === false ? "NOT verified" : "not verified";
+  box.append(el("h2", null, "Result"), el("span", "badge " + cls, r.status.replace("_", " ") + " · " + verified), el("p", null, r.summary));
+  if (r.needs_from_user) box.append(el("p", null, "Needs from you: " + r.needs_from_user));
+  (r.verification.checks || []).forEach(c => {
+    const d = el("div", "check"); d.append(el("span", c.passed ? "pass" : "fail", c.passed ? "✓ " : "✗ "), document.createTextNode(c.criterion), el("small", null, c.evidence)); box.append(d);
+  });
+  const u = r.usage || {};
+  box.append(el("p", "muted", `${r.steps} steps · ${r.verify_rounds} verification round(s) · ${r.duration_s}s · ${u.calls} model calls` +
+    (u.estimated_cost_usd != null ? ` · about $${u.estimated_cost_usd}` : "") + ` · evidence in runs/${r.run_id}/`));
+}
+</script>
+</body>
+</html>

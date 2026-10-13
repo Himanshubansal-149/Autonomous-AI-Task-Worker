@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Accounts payable</h1>
+<div class="stats">
+  <div class="card"><div class="n">{{ stats.total }}</div>invoices recorded</div>
+  <div class="card"><div class="n">{{ stats.unpaid or 0 }}</div>unpaid</div>
+  <div class="card"><div class="n">{{ stats.overdue or 0 }}</div>overdue</div>
+</div>
+<div class="actions"><a class="btn" href="/erp/invoices/new">Record an invoice</a><a class="btn secondary" href="/erp/invoices">View invoices</a></div>
+{% endblock %}
